@@ -93,3 +93,5 @@ converts to:
 ```
 
 Very classy indeed!
+
+**Note**: This purposefully doesn't conform to any spec or discussion related to CommonMark. It's only ever useful if you want to add classes to some Markdown and nothing else. A possible use case could be if you wanted to give users a very limited styling capability beyond _em_ and __strong__.
