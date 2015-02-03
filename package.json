@@ -1,0 +1,25 @@
+{
+  "name": "markdown-it-classy",
+  "version": "0.0.1",
+  "description": "Plugin for markdown-it - add classes to your markdown",
+  "main": "index.js",
+  "author": "Andrey Pissantchev",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/andrey-p/markdown-it-classy.git"
+  },
+  "keywords": [
+    "markdown-it-plugin"
+  ],
+  "devDependencies": {
+    "jslint": "^0.6.6",
+    "markdown-it": "^3.0.4",
+    "mocha": "^2.0.1",
+    "should": "^4.3.0"
+  },
+  "scripts": {
+    "test": "./node_modules/.bin/mocha -R spec test/classy.js",
+    "pretest": "jslint ./*.js && jslint --predef=describe --predef=it --predef=before ./test/*.js"
+  }
+}
