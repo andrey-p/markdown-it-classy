@@ -22,6 +22,6 @@
   "scripts": {
     "test": "./node_modules/.bin/mocha -R spec test/classy.js",
     "pretest": "jslint ./*.js && jslint --predef=describe --predef=it --predef=before ./test/*.js",
-    "bundle": "./node_modules/.bin/browserify index.js -o dist/markdown-it-classy.js"
+    "bundle": "./node_modules/.bin/browserify -s markdown-it-classy index.js -o dist/markdown-it-classy.js"
   }
 }
