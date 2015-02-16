@@ -12,13 +12,31 @@ Install
 $ npm install --save markdown-it-classy
 ```
 
+or, if using bower:
+
+```
+$ bower install --save markdown-it-classy
+```
+
+or, just grab `dist/markdown-it-classy.js` and add it to your project.
+
 Plug
 ---
+
+For NodeJS and other environments that expose `require`:
 
 ```
 var classy = require("markdown-it-classy"),
   MarkdownIt = require("markdown-it"),
   md = new MarkdownIt();
+
+md.use(classy);
+```
+
+If you're using `markdown-it-classy` in the browser without `require` support, you can find it on the global object:
+
+```
+var classy = window.markdownItClassy;
 
 md.use(classy);
 ```
