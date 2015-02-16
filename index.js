@@ -78,6 +78,12 @@ function getClassyFromBlockElement(tokens, idx, fullName) {
     }
   }
 
+  // In the case of empty markdown elements ("*" for example), there
+  // won't be any inline content, so in that case just return null
+  if (!(inlineContents && inlineContents.length)) {
+    return null;
+  }
+
   // if the last token of the inline content is of type "classy"
   // we have to do our thing
   if (inlineContents[inlineContents.length - 1].type !== "classy") {

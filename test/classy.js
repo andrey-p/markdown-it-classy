@@ -37,4 +37,7 @@ describe("markdown-it-classy", function () {
   it("should work with blockquotes", function () {
     md.render("> foo bar\n{baz}").should.containEql("<blockquote class=\"baz\">");
   });
+  it("should handle empty markdown elements", function () {
+    md.render("*").should.containEql("<ul>");
+  });
 });
