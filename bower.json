@@ -1,0 +1,16 @@
+{
+  "name": "markdown-it-classy",
+  "version": "0.0.1",
+  "description": "Plugin for markdown-it - add classes to your markdown",
+  "main": "dist/markdown-it-classy.js",
+  "author": "Andrey Pissantchev",
+  "license": "MIT",
+  "ignore": [
+    "./*",
+    "**/*",
+    "!dist/*"
+  ],
+  "keywords": [
+    "markdown-it-plugin"
+  ]
+}
