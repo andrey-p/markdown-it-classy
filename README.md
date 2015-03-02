@@ -112,4 +112,43 @@ converts to:
 
 Very classy indeed!
 
-**Note**: This purposefully doesn't conform to any spec or discussion related to CommonMark. It's only ever useful if you want to add classes to some Markdown and nothing else. A possible use case could be if you wanted to give users a very limited styling capability beyond _em_ and __strong__.
+Nested elements
+---
+
+Because of the way the CommonMark spec keeps track of nested elements (eg. a paragraph inside a blockquote), there is a slight gotcha when it comes to specifying classes for one or the other. So while adding classes to paragraphs only is straightforward:
+
+```
+Something or other. {someclass}
+                                   =>     <p class="someclass">Something or other.</p>
+Something or other.
+{someclass}
+```
+
+with blockquotes, the situation is a bit more involved:
+
+```
+> Something or other. {someclass}  =>     <blockquote><p class="someclass">Something or other.</p></blockquote>
+
+HOWEVER!
+
+> Something or other.
+{someclass}
+                                   =>     <blockquote class="someclass"><p>Something or other.</p></blockquote>
+> Something or other.
+> {someclass}
+```
+
+So basically, if the class statement is after a newline, it gets applied to the outer element, and if it's inline, it's applied to the inner element.
+
+The same applies for lists:
+
+```
+- something {item-class-one}
+- other {item-class-two}           =>     <ul class="list-class"><li class="item-class-one">something</li><li class="item-class-two">other</li><ul>
+{list-class}
+```
+
+Disclaimer
+---
+
+This purposefully doesn't conform to any spec or discussion related to CommonMark. It's only ever useful if you want to add classes to some Markdown and nothing else. A possible use case could be if you wanted to give users a very limited styling capability beyond _em_ and __strong__.
