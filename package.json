@@ -1,6 +1,6 @@
 {
   "name": "markdown-it-classy",
-  "version": "0.1.1",
+  "version": "0.1.2",
   "description": "Plugin for markdown-it - add classes to your markdown",
   "main": "index.js",
   "author": "Andrey Pissantchev",
@@ -12,10 +12,13 @@
   "keywords": [
     "markdown-it-plugin"
   ],
+  "peerDependencies": {
+    "markdown-it": "<4.0.0"
+  },
   "devDependencies": {
     "browserify": "^8.1.3",
     "jslint": "^0.6.6",
-    "markdown-it": "^3.0.4",
+    "markdown-it": "<4.0.0",
     "mocha": "^2.0.1",
     "should": "^4.3.0"
   },
