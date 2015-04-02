@@ -24,7 +24,10 @@ function isValidClassChar(code) {
 
 function parse(state) {
   var pos = state.pos,
-    classString = "";
+    classString = "",
+    i,
+    pendingText,
+    token;
 
   if (state.src.charCodeAt(pos) !== 0x7B) { // {
     return false;
@@ -54,144 +57,75 @@ function parse(state) {
 
   state.pos = pos;
 
-  state.push({
-    type: "classy",
-    level: state.level,
-    content: classString
-  });
+  // work back through the tokens, checking if any of them is an open inline tag
+  for (i = 0; i < state.tokens.length; i += 1) {
+    if (state.tokens[i].type === "em_open"
+        || state.tokens[i].type === "strong_open") {
+      state.tokens[i].attrPush(["class", classString]);
+
+      // if it's a class statement in an inline tag
+      // there might be a leftover space at the end
+      pendingText = state.pending;
+      if (pendingText.charCodeAt(pendingText.length - 1) === 0x20) {
+        state.pending = pendingText.substring(0, pendingText.length - 1);
+      }
+
+      return true;
+    }
+  }
+
+  token = state.push("classy", "classy", 0);
+  token.content = classString;
+  token.hidden = true;
 
   return true;
 }
 
-function getClassyFromBlockElement(tokens, idx, fullName) {
+function getClassyFromInlineToken(inlineToken) {
   var classy,
-    secondToLastToken,
-    i,
-    inlineContents;
+    tokens = inlineToken.children,
+    numChildren = tokens.length;
 
-  // in a block element the inline content is always sandwiched
-  // between the opening and the closing tags
-  // (we look for the last inline token because
-  // that's the one we're interested in for <ul>s and <ol>s)
+  // the element *at the end* of the inline tag
+  // should be classy
 
-  for (i = idx; i < tokens.length; i += 1) {
-    if (tokens[i].type === "inline") {
-      inlineContents = tokens[i].children;
-    }
-
-    if (tokens[i].type === fullName + "_close") {
-      break;
-    }
-  }
-
-  // In the case of empty markdown elements ("*" for example), there
-  // won't be any inline content, so in that case just return null
-  if (!(inlineContents && inlineContents.length)) {
+  if (tokens[numChildren - 1].type !== "classy") {
     return null;
   }
 
-  // only proceed if the last token of the inline content
-  // is of type "classy"
-  if (inlineContents[inlineContents.length - 1].type !== "classy") {
-    return null;
-  }
+  classy = tokens.pop();
+  numChildren -= 1;
 
-  // this is where things get hairy
-
-  // we know that the last token is classy, but we also need to know
-  // whether classy was separated from the inline text by a newline or space
-  // so grab the second to last token...
-  secondToLastToken = inlineContents[inlineContents.length - 2];
-
-  if (secondToLastToken.type === "softbreak") {
-    // ... if it's split with a newline, we always apply the class
-    // to the containing block element
-    // so remove it from the inline contents
-    classy = inlineContents.pop();
-
-    // get rid of the soft break token too
-    inlineContents.pop();
-  } else if (secondToLastToken.type === "text"
-      && ["blockquote", "ordered_list", "bullet_list"].indexOf(fullName) === -1) {
-    // ... if it wasn't a newline, and container isn't a blockquote,
-    // ol, or ul, apply this the class to it
-    classy = inlineContents.pop();
-
-    // trim whitespace of that last bit of text
-    secondToLastToken.content = secondToLastToken.content.trim();
+  if (tokens[numChildren - 1].type === "softbreak") {
+    // we may need to get rid of the newline just before classy statement
+    tokens.pop(numChildren - 1);
+  } else {
+    // or there might be some whitespace
+    // we may need to trim on the previous element
+    tokens[numChildren - 1].content = tokens[numChildren - 1].content.trim();
   }
 
   return classy;
 }
 
-function getClassyFromInlineElement(tokens, idx, fullName) {
-  var classy,
-    closingIdx,
-    startingLevel = tokens[idx].level,
-    i;
+function parseBlock(state) {
+  var i,
+    classy;
 
-  // in an inline element, the opening and closing tags
-  // may have multiple tokens between them
-  // so we need to iterate through the remaining elements
-  // and get the closing tag
-  // the element *before* the closing tag should be "classy"
+  for (i = 0; i < state.tokens.length; i += 1) {
+    if (state.tokens[i].type === "inline") {
+      classy = getClassyFromInlineToken(state.tokens[i]);
 
-  for (i = idx; i < tokens.length; i += 1) {
-    if (tokens[i].type === fullName + "_close"
-        && tokens[i].level === startingLevel) {
-      closingIdx = i;
-      break;
+      if (classy) {
+        state.tokens[i - 1].attrPush(["class", classy.content]);
+      }
     }
   }
-
-  if (tokens[closingIdx - 1].type !== "classy") {
-    return null;
-  }
-
-  // we can't remove the classy token
-  // as it'll throw off markdown-it's token iteration
-  classy = tokens[closingIdx - 1];
-
-  // some whitespace we may need to trim on the previous element
-  tokens[closingIdx - 2].content = tokens[closingIdx - 2].content.trim();
-
-  return classy;
-}
-
-// replace all rules that we want to enable classy on
-function replaceRenderer(md, renderer) {
-  var openMethodName = renderer.fullName + "_open";
-  replacedMethods[openMethodName] = md.renderer.rules[openMethodName];
-
-  md.renderer.rules[openMethodName] = function (tokens, idx) {
-    var classy, result;
-
-    // first get the result as per the original method we replaced
-    result = replacedMethods[openMethodName].apply(null, arguments).trim();
-
-    if (renderer.inline) {
-      classy = getClassyFromInlineElement(tokens, idx, renderer.fullName);
-    } else {
-      classy = getClassyFromBlockElement(tokens, idx, renderer.fullName);
-    }
-
-    if (classy) {
-      result = result.replace(new RegExp("<" + renderer.pattern), "$& class=\"" + classy.content + "\"");
-    }
-
-    return result;
-  };
 }
 
 classy = function (md) {
   md.inline.ruler.push("classy", parse);
-
-  // no-op
-  md.renderer.rules.classy = function () { return ""; };
-
-  renderersToReplace.forEach(function (renderer) {
-    replaceRenderer(md, renderer);
-  });
+  md.core.ruler.push("classy", parseBlock);
 };
 
 module.exports = classy;
