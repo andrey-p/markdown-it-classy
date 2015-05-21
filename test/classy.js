@@ -62,4 +62,10 @@ describe("markdown-it-classy", function () {
   it("should handle empty markdown elements", function () {
     md.render("*").should.containEql("<ul>");
   });
+  it("should do nothing if not attached to an element", function () {
+    var result = md.render("foo\n\n{bar}\n\nbaz");
+    result.should.containEql("<p>foo</p>");
+    result.should.not.containEql("bar");
+    result.should.containEql("<p>baz</p>");
+  });
 });

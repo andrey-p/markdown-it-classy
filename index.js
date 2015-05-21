@@ -82,10 +82,12 @@ function getClassyFromInlineToken(inlineToken) {
     tokens = inlineToken.children,
     numChildren = tokens.length;
 
-  // the element *at the end* of the inline tag
+  // the token *at the end* of the inline tag
   // should be classy
-
-  if (tokens[numChildren - 1].type !== "classy") {
+  //
+  // also, don't do anything if the only token present is a classy token
+  if (tokens[numChildren - 1].type !== "classy"
+      || tokens.length === 1) {
     return null;
   }
 
