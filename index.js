@@ -72,7 +72,14 @@ function parse(state) {
 
   // work back through the tokens, checking if any of them is an open inline tag
   // if it does turn out we're in an inline tag, the class belongs to that
-  for (i = 0; i < state.tokens.length; i += 1) {
+  //
+  // NOTE TO SELF refactor this, add handling for <a> tags as well
+  for (i = state.tokens.length - 1; i >= 0; i -= 1) {
+    if (state.tokens[i].type === "em_close"
+        || state.tokens[i].type === "strong_close") {
+      break;
+    }
+
     if (state.tokens[i].type === "em_open"
         || state.tokens[i].type === "strong_open") {
       state.tokens[i].attrPush(["class", classString]);

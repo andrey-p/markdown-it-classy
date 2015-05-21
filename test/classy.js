@@ -31,6 +31,11 @@ describe("markdown-it-classy", function () {
   it("should work with strong tags", function () {
     md.render("__foo {bar}__").should.containEql("<strong class=\"bar\">foo</strong>");
   });
+  it("shouldn't get distracted by inline tags earlier in the element", function () {
+    var result = md.render("_foo_ {bar}");
+    result.should.not.containEql("<em class=\"bar\">");
+    result.should.containEql("<p class=\"bar\">");
+  });
   it("should work with ul tags", function () {
     md.render("- foo\n- baz\n{bar}").should.containEql("<ul class=\"bar\">");
   });
