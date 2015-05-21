@@ -1,17 +1,6 @@
 "use strict";
 
-var classy,
-  renderersToReplace = [
-    { pattern: "p", fullName: "paragraph" },
-    { pattern: "h\\d", fullName: "heading" },
-    { pattern: "ul", fullName: "bullet_list" },
-    { pattern: "li", fullName: "list_item" },
-    { pattern: "ol", fullName: "ordered_list" },
-    { pattern: "blockquote", fullName: "blockquote" },
-    { pattern: "em", fullName: "em", inline: true },
-    { pattern: "strong", fullName: "strong", inline: true }
-  ],
-  replacedMethods = {};
+var classy;
 
 function isValidClassChar(code) {
   return (code >= 0x30 && code <= 0x39) || // 0-9
@@ -24,9 +13,11 @@ function isValidClassChar(code) {
 
 function parse(state) {
   var pos = state.pos,
+    initialPos = pos,
     classString = "",
     i,
     pendingText,
+    preferOuter = false,
     token;
 
   if (state.src.charCodeAt(pos) !== 0x7B) { // {
@@ -49,21 +40,25 @@ function parse(state) {
   // advance to account for closing brace
   pos += 1;
 
+
   // only check classy statements at the end of the element
-  // or just before a newline
-  if (pos !== state.posMax && state.src.charCodeAt(pos) !== 0xA) { // \n
+  if (pos !== state.posMax && state.src.charCodeAt(pos) !== 0xA) {
     return false;
+  }
+
+  if (state.src.charCodeAt(initialPos - 1) === 0xA) {
+    preferOuter = true;
   }
 
   state.pos = pos;
 
   // work back through the tokens, checking if any of them is an open inline tag
+  // if it does turn out we're in an inline tag, the class belongs to that
   for (i = 0; i < state.tokens.length; i += 1) {
     if (state.tokens[i].type === "em_open"
         || state.tokens[i].type === "strong_open") {
       state.tokens[i].attrPush(["class", classString]);
 
-      // if it's a class statement in an inline tag
       // there might be a leftover space at the end
       pendingText = state.pending;
       if (pendingText.charCodeAt(pendingText.length - 1) === 0x20) {
@@ -77,6 +72,7 @@ function parse(state) {
   token = state.push("classy", "classy", 0);
   token.content = classString;
   token.hidden = true;
+  token.preferOuter = preferOuter;
 
   return true;
 }
@@ -108,16 +104,43 @@ function getClassyFromInlineToken(inlineToken) {
   return classy;
 }
 
+function getOpeningToken(tokens, preferOuter, currentIndex) {
+  var closingTokenIndex = currentIndex + 1,
+    openingTokenType,
+    i;
+
+  if (tokens[closingTokenIndex].hidden) {
+    closingTokenIndex += 1;
+  }
+
+  if (preferOuter && tokens[closingTokenIndex + 1]
+      && /_close$/.test(tokens[closingTokenIndex + 1].type)) {
+    closingTokenIndex += 1;
+  }
+
+  openingTokenType = tokens[closingTokenIndex].type.replace("_close", "_open");
+
+  for (i = currentIndex; i >= 0; i -= 1) {
+    if (tokens[i].type === openingTokenType
+        && tokens[i].level === tokens[closingTokenIndex].level) {
+      return tokens[i];
+    }
+  }
+}
+
 function parseBlock(state) {
   var i,
+    openingToken,
     classy;
 
   for (i = 0; i < state.tokens.length; i += 1) {
     if (state.tokens[i].type === "inline") {
       classy = getClassyFromInlineToken(state.tokens[i]);
+      while (classy) {
+        openingToken = getOpeningToken(state.tokens, classy.preferOuter, i);
+        openingToken.attrPush(["class", classy.content]);
 
-      if (classy) {
-        state.tokens[i - 1].attrPush(["class", classy.content]);
+        classy = getClassyFromInlineToken(state.tokens[i]);
       }
     }
   }
