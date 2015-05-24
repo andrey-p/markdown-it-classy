@@ -2,7 +2,7 @@
   "name": "markdown-it-classy",
   "version": "0.1.2",
   "description": "Plugin for markdown-it - add classes to your markdown",
-  "main": "index.js",
+  "main": "./lib/index.js",
   "author": "Andrey Pissantchev",
   "license": "MIT",
   "repository": {
@@ -24,7 +24,7 @@
   },
   "scripts": {
     "test": "./node_modules/.bin/mocha -R spec test/classy.js",
-    "pretest": "jslint ./*.js && jslint --predef=describe --predef=it --predef=before ./test/*.js",
-    "bundle": "./node_modules/.bin/browserify -s markdown-it-classy index.js -o dist/markdown-it-classy.js"
+    "pretest": "jslint ./lib/*.js && jslint --predef=describe --predef=it --predef=before ./test/*.js",
+    "bundle": "./node_modules/.bin/browserify -s markdown-it-classy ./lib/index.js -o dist/markdown-it-classy.js"
   }
 }
