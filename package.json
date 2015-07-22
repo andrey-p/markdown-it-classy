@@ -1,6 +1,6 @@
 {
   "name": "markdown-it-classy",
-  "version": "0.1.2",
+  "version": "0.2.0",
   "description": "Plugin for markdown-it - add classes to your markdown",
   "main": "index.js",
   "author": "Andrey Pissantchev",
